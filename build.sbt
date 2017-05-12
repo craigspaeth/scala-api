@@ -1,41 +1,10 @@
-import org.scalatra.sbt._
-import org.scalatra.sbt.PluginKeys._
-import ScalateKeys._
+name := "Hellow World"
 
-val ScalatraVersion = "2.5.0"
+version := "1.0"
 
-ScalatraPlugin.scalatraSettings
-
-scalateSettings
-
-organization := "craigspaeth"
-
-name := "scalaapi"
-
-version := "0.1.0-SNAPSHOT"
-
-scalaVersion := "2.12.1"
-
-resolvers += Classpaths.typesafeReleases
+scalaVersion := "2.11.8"
 
 libraryDependencies ++= Seq(
-  "org.scalatra" %% "scalatra" % ScalatraVersion,
-  "org.scalatra" %% "scalatra-scalate" % ScalatraVersion,
-  "org.scalatra" %% "scalatra-specs2" % ScalatraVersion % "test",
-  "ch.qos.logback" % "logback-classic" % "1.1.5" % "runtime",
-  "org.eclipse.jetty" % "jetty-webapp" % "9.2.15.v20160210" % "container",
-  "javax.servlet" % "javax.servlet-api" % "3.1.0" % "provided"
+  "org.sangria-graphql" %% "sangria" % "1.2.0",
+  "org.sangria-graphql" %% "sangria-spray-json" % "1.0.0"
 )
-
-scalateTemplateConfig in Compile <<= (sourceDirectory in Compile){ base =>
-  Seq(
-    TemplateConfig(
-      base / "webapp" / "WEB-INF" / "templates",
-      Seq.empty,  /* default imports should be added here */
-      Seq.empty,  /* add extra bindings here */
-      Some("templates")
-    )
-  )
-}
-
-enablePlugins(JettyPlugin)
