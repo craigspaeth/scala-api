@@ -1,15 +1,16 @@
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import akka.stream.ActorMaterializer
 import scala.io.StdIn
 import api.graphql.GraphQL.{schema, PictureRepo}
-import sangria.macros._
 import scala.concurrent._
 import sangria.marshalling.sprayJson._
 import spray.json._
 import sangria.execution.Executor
+import sangria.parser.QueryParser
+import scala.util.{Failure, Success}
 
 object WebServer {
   def main(args: Array[String]) {
@@ -17,28 +18,19 @@ object WebServer {
     implicit val system = ActorSystem("my-system")
     implicit val materializer = ActorMaterializer()
     // needed for the future flatMap/onComplete in the end
-    implicit val executionContext = system.dispatcher
+    implicit val executionContext: ExecutionContextExecutor = system.dispatcher
 
     val route =
-      get {
-        println("...")
-        val query =
-          graphql"""
-            query { 
-              pictures {
-                width
-                height
-                url
-              }
-            }
-          """
-        val result: Future[JsValue] =
-          Executor.execute(schema, query, new PictureRepo)
-        
-        onSuccess(result) {
-          // TODO: Better pattern matching & proper schema integration
-          case _ => complete(result.toString)
+      (post & path("graphql")) {
+        entity(as[JsValue]) { json =>
+          val JsString(query) = json.asJsObject.fields("query")
+
+          val Success(queryAst) = QueryParser.parse(query)
+          complete(Executor.execute(schema, queryAst, new PictureRepo))
         }
+      } ~
+      get {
+        getFromResource("graphiql.html")
       }
     val bindingFuture = Http().bindAndHandle(route, "localhost", 5000)
 
