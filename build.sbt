@@ -9,5 +9,6 @@ libraryDependencies ++= Seq(
   "org.sangria-graphql" %% "sangria-spray-json" % "1.0.0",
   "com.typesafe.akka" %% "akka-http" % "10.0.1",
   "com.typesafe.akka" %% "akka-http-spray-json" % "10.0.1",
-  "org.scalatest" %% "scalatest" % "3.0.1" % Test
+  "org.scalatest" %% "scalatest" % "3.0.1" % Test,
+  "org.mongodb.scala" %% "mongo-scala-driver" % "2.0.0"
 )

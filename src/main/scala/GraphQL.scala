@@ -1,10 +1,17 @@
 package api.graphql
 
 import sangria.schema._
-import sangria.macros._
 import sangria.macros.derive._
+import org.mongodb.scala._
+
+import scala.concurrent.Await
+import scala.concurrent.duration._
+import org.mongodb.scala.bson.{BsonDouble, BsonString}
 
 object GraphQL {
+  // Mongo Connection
+  val db = MongoClient().getDatabase("scala-api")
+  val col = db.getCollection("pictures")
 
   // Picture Type
   case class Picture(
@@ -24,7 +31,24 @@ object GraphQL {
       Picture(200, 400, "kittens.com/gruffy"))
 
     def pictures: List[Picture] = {
-      Pictures
+      val docs = Await.result(col.find().limit(10).toFuture(), 1.second)
+      val pics = docs.map((doc) => {
+        Picture(
+          doc.get("width") match {
+            case None => 0
+            case Some(v: BsonDouble) => v.intValue
+          },
+          doc.get("height") match {
+            case None => 0
+            case Some(v: BsonDouble) => v.intValue
+          },
+          doc.get("url") match {
+            case None => ""
+            case Some(v: BsonString) => v.getValue
+          }
+        )
+      })
+      return pics.toList
     }
   }
 
@@ -32,7 +56,7 @@ object GraphQL {
   val QueryType = ObjectType("Query", fields[PictureRepo, Unit](
     Field("pictures", ListType(PictureType),
       description = Some("Returns a list of pictures."),
-      resolve = (res) => { 
+      resolve = (res) => {
         res.ctx.pictures
       })))
 
